@@ -48,9 +48,9 @@ rag-knowledge-assistant/
    pip install -r requirements.txt
    ```
 
-2. Add your Gemini API key to a `.env` file:
+2. Add Gemini API key to a `.env` file:
    ```
-   GEMINI_API_KEY=your_key_here
+   GEMINI_API_KEY=API_key_here
    ```
    Get a free key at [aistudio.google.com](https://aistudio.google.com).
 
