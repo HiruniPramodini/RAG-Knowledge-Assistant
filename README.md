@@ -84,3 +84,13 @@ Tests verify that retrieval returns relevant, non-empty results from the correct
 - Retrieval evaluation layer (faithfulness, context precision/recall)
 - Agentic workflow (LangGraph) for multi-step questions requiring more than one retrieval pass
 - Docker + CI/CD deployment, following the same MLOps practices as a companion project
+
+## Demo
+
+**Asking a question — cross-document retrieval:**
+
+![CLI demo](screenshots/demo-qa.png)
+
+**Automated tests passing:**
+
+![Tests passing](screenshots/tests-passing.png)
