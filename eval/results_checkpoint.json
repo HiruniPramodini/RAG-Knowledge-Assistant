@@ -1,0 +1,18 @@
+[
+  {
+    "question": "How do I stop my container from losing data on restart?",
+    "answer": "Docker volumes solve this by mapping a directory inside the container to a location on the host machine (or a Docker-managed storage area), so data persists across container restarts and removals.",
+    "expected_sources": [
+      "docker_basics.md"
+    ],
+    "retrieved_sources": [
+      "data\\raw_docs\\docker_basics.md",
+      "data\\raw_docs\\kubernetes_basics.md"
+    ],
+    "precision": 0.6666666666666666,
+    "recall": 1.0,
+    "faithfulness_score": 1.0,
+    "faithfulness_reason": "Every claim in the answer is directly supported as it is a verbatim sentence from the provided context.",
+    "latency_seconds": 5.27
+  }
+]
