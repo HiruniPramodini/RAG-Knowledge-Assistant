@@ -111,3 +111,58 @@ Answer:"""
     return {**state, "answer": response.text, "sources": []}
 
 
+def route_decision(state: GraphState) -> str:
+    """Tells the graph which node to go to next, based on the router's decision."""
+    return "rag_node" if state["needs_retrieval"] else "direct_answer_node"
+
+
+def build_graph():
+    """Assemble the graph: nodes, edges, and the conditional routing logic."""
+    workflow = StateGraph(GraphState)
+
+    workflow.add_node("router_node", router_node)
+    workflow.add_node("rag_node", rag_node)
+    workflow.add_node("direct_answer_node", direct_answer_node)
+
+    workflow.add_edge(START, "router_node")
+
+    workflow.add_conditional_edges(
+        "router_node",
+        route_decision,
+        {
+            "rag_node": "rag_node",
+            "direct_answer_node": "direct_answer_node",
+        },
+    )
+
+    workflow.add_edge("rag_node", END)
+    workflow.add_edge("direct_answer_node", END)
+
+    return workflow.compile()
+
+
+if __name__ == "__main__":
+    graph = build_graph()
+    history = []
+
+    test_questions = [
+        "How do I stop my container from losing data on restart?",
+        "What about for Kubernetes instead?",
+        "My name is Hiruni",
+        "Do you know my name?",
+    ]
+
+    for question in test_questions:
+        print(f"\n{'='*60}")
+        print(f"Question: {question}")
+        result = graph.invoke({
+            "question": question,
+            "needs_retrieval": None,
+            "answer": None,
+            "sources": None,
+            "history": history,
+        })
+        print(f"Answer: {result['answer']}")
+        print(f"Sources: {result['sources']}")
+
+        history.append({"question": question, "answer": result["answer"]})
