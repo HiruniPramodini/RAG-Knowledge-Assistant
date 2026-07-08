@@ -60,3 +60,54 @@ def router_node(state: GraphState) -> GraphState:
     question = state["question"]
     history_text = format_history(state.get("history", []))
 
+    routing_prompt = f"""{history_text}Determine if this question is about Docker, Kubernetes, or FastAPI 
+— even generally, even if you already know the answer, and even if it's a follow-up referring 
+to the previous conversation. If the topic is Docker, Kubernetes, or FastAPI in any way, always 
+answer YES, since we want to ground answers in our official documentation rather than general 
+knowledge. Only answer NO if the question is completely unrelated to these three topics 
+(e.g. greetings, small talk, general knowledge, math, or the user sharing personal info like their name).
+
+Question: {question}
+
+Respond with exactly one word: YES or NO."""
+
+    response = call_gemini_with_retry(
+        model="gemini-2.5-flash-lite",
+        contents=routing_prompt,
+    )
+
+    decision = response.text.strip().upper()
+    needs_retrieval = "YES" in decision
+
+    print(f"[Router] Decision: {'retrieve documents' if needs_retrieval else 'answer directly'}")
+
+    return {**state, "needs_retrieval": needs_retrieval}
+
+
+def rag_node(state: GraphState) -> GraphState:
+    """Run the existing retrieve + generate pipeline, passing conversation history through."""
+    result = generate_answer(state["question"], history=state.get("history", []))
+    return {**state, "answer": result["answer"], "sources": result["sources"]}
+
+
+def direct_answer_node(state: GraphState) -> GraphState:
+    """Answer directly, without any document retrieval, but still aware of prior turns."""
+    history_text = format_history(state.get("history", []))
+
+    prompt = f"""You are a helpful assistant having an ongoing conversation. 
+Use the conversation history below to remember facts the user has already told you 
+(like their name), and answer naturally as a continuation of the conversation.
+
+{history_text}Current question: {state['question']}
+
+Answer:"""
+
+    print(f"\n[DEBUG] Full prompt sent to model:\n{prompt}\n")
+
+    response = call_gemini_with_retry(
+        model="gemini-2.5-flash-lite",
+        contents=prompt,
+    )
+    return {**state, "answer": response.text, "sources": []}
+
+
