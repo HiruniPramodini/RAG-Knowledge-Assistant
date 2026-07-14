@@ -23,3 +23,13 @@ If the container has already exited and been removed, add the `-a` flag to see l
 
 **5. Insufficient memory or resource limits.** If a container has a memory limit set that's too low for the application to even initialize, it can be killed by the system immediately after starting, often with no clear application-level error — check `docker inspect` for an "OOMKilled" status in these cases.
 
+## Restart Policies and Crash Loops
+
+By default, a crashed container simply stops. Docker's restart policies control what happens after a crash:
+
+- `--restart no` (default) — the container stays stopped
+- `--restart on-failure` — restarts only if the container exits with a non-zero (error) status
+- `--restart always` — always restarts, regardless of exit status, even after a host reboot
+
+A container repeatedly crashing and restarting is often called a "crash loop." If a container is stuck in a crash loop, checking `docker logs` immediately after each restart is essential, since the container may not stay up long enough to inspect it interactively.
+
