@@ -33,3 +33,12 @@ By default, a crashed container simply stops. Docker's restart policies control 
 
 A container repeatedly crashing and restarting is often called a "crash loop." If a container is stuck in a crash loop, checking `docker logs` immediately after each restart is essential, since the container may not stay up long enough to inspect it interactively.
 
+## Debugging Interactively
+
+If logs alone aren't enough, you can override the container's default startup command to get an interactive shell instead, to manually investigate the filesystem and environment:
+
+```
+docker run -it --entrypoint /bin/sh <image_name>
+```
+
+This starts the container with a shell instead of its normal startup command, letting you manually run the application's start command and observe exactly where it fails.
