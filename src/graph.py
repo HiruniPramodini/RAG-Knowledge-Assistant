@@ -1,4 +1,6 @@
 import time
+import ast
+import operator
 from typing import TypedDict, Optional
 
 from langgraph.graph import StateGraph, START, END
@@ -14,10 +16,10 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 class GraphState(TypedDict):
     """The shared 'clipboard' that travels through every node in the graph."""
     question: str
-    needs_retrieval: Optional[bool]
+    route: Optional[str]  # "rag", "direct", "clarify", or "tool_calculator"
     answer: Optional[str]
     sources: Optional[list]
-    history: list  # list of {"question": ..., "answer": ...} from previous turns
+    history: list  # list of {"question": ..., "answer": ..., "route": ...} from previous turns
 
 
 def call_gemini_with_retry(model, contents, max_retries=3, delay_seconds=10):
@@ -52,24 +54,59 @@ def format_history(history, limit=3):
     return f"Previous conversation:\n{formatted}\n\n"
 
 
+# --- Tool: calculator -------------------------------------------------
+# A real "tool" in the agentic sense: precise, deterministic code the
+# LLM cannot do reliably itself. We use Python's `ast` module to safely
+# evaluate only arithmetic expressions -- never raw eval(), which would
+# be a security risk (it could execute arbitrary code).
+
+_ALLOWED_OPERATORS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.Pow: operator.pow,
+    ast.USub: operator.neg,
+}
+
+
+
 def router_node(state: GraphState) -> GraphState:
     """
-    Decide whether this question needs document retrieval, or can be
-    answered directly without touching the vector database at all.
+    Decide how to handle this question: retrieve documents (RAG), answer
+    directly, ask a clarifying question, or hand off to the calculator
+    tool for precise arithmetic.
+
+    If the immediately previous turn was a clarifying question, we
+    deterministically force the RAG path rather than asking the LLM to
+    judge that again -- relying on the model to infer "this is a reply
+    to my own clarification" from history text alone proved unreliable.
     """
     question = state["question"]
-    history_text = format_history(state.get("history", []))
+    history = state.get("history", [])
 
-    routing_prompt = f"""{history_text}Determine if this question is about Docker, Kubernetes, or FastAPI 
-— even generally, even if you already know the answer, and even if it's a follow-up referring 
-to the previous conversation. If the topic is Docker, Kubernetes, or FastAPI in any way, always 
-answer YES, since we want to ground answers in our official documentation rather than general 
-knowledge. Only answer NO if the question is completely unrelated to these three topics 
-(e.g. greetings, small talk, general knowledge, math, or the user sharing personal info like their name).
+    if history and history[-1].get("route") == "clarify":
+        print("[Router] Decision: rag (forced — this is a reply to a clarifying question)")
+        return {**state, "route": "rag"}
 
-Question: {question}
+    history_text = format_history(history)
 
-Respond with exactly one word: YES or NO."""
+    routing_prompt = f"""{history_text}You are routing a user's message to one of four paths. Respond with 
+exactly one word: RAG, DIRECT, CLARIFY, or CALCULATOR.
+
+- RAG: the question is about Docker, Kubernetes, or FastAPI, even generally, and there is 
+  enough information to search documentation and answer it.
+- DIRECT: the question is unrelated to those topics (greetings, small talk, general 
+  knowledge, personal info sharing) and needs no document lookup.
+- CLARIFY: the question is about Docker, Kubernetes, or FastAPI, BUT it is too vague or 
+  ambiguous to answer usefully as-is.
+- CALCULATOR: the question requires precise arithmetic (addition, subtraction, 
+  multiplication, division, exponents) on specific numbers, e.g. "what is 15% of 200" or 
+  "if I run 3 replicas at 512MB each, how much total memory is that?".
+
+Current question: {question}
+
+Respond with exactly one word: RAG, DIRECT, CLARIFY, or CALCULATOR."""
 
     response = call_gemini_with_retry(
         model="gemini-2.5-flash-lite",
@@ -77,11 +114,19 @@ Respond with exactly one word: YES or NO."""
     )
 
     decision = response.text.strip().upper()
-    needs_retrieval = "YES" in decision
 
-    print(f"[Router] Decision: {'retrieve documents' if needs_retrieval else 'answer directly'}")
+    if "CALCULATOR" in decision:
+        route = "tool_calculator"
+    elif "CLARIFY" in decision:
+        route = "clarify"
+    elif "RAG" in decision:
+        route = "rag"
+    else:
+        route = "direct"
 
-    return {**state, "needs_retrieval": needs_retrieval}
+    print(f"[Router] Decision: {route}")
+
+    return {**state, "route": route}
 
 
 def rag_node(state: GraphState) -> GraphState:
@@ -102,7 +147,28 @@ Use the conversation history below to remember facts the user has already told y
 
 Answer:"""
 
-    print(f"\n[DEBUG] Full prompt sent to model:\n{prompt}\n")
+    response = call_gemini_with_retry(
+        model="gemini-2.5-flash-lite",
+        contents=prompt,
+    )
+    return {**state, "answer": response.text, "sources": []}
+
+
+def clarify_node(state: GraphState) -> GraphState:
+    """
+    The question is too ambiguous to answer well. Ask the user a specific
+    clarifying question instead of guessing, and stop here for this turn.
+    """
+    history_text = format_history(state.get("history", []))
+
+    prompt = f"""{history_text}The user's question below is too vague or ambiguous to answer 
+usefully as-is, in the context of a Docker/Kubernetes/FastAPI assistant. Ask ONE short, 
+specific clarifying question to understand what they actually need. Do not answer the 
+question yet — only ask for clarification.
+
+Question: {state['question']}
+
+Clarifying question:"""
 
     response = call_gemini_with_retry(
         model="gemini-2.5-flash-lite",
@@ -111,9 +177,50 @@ Answer:"""
     return {**state, "answer": response.text, "sources": []}
 
 
+def calculator_node(state: GraphState) -> GraphState:
+    """
+    Tool-calling node: extract a plain arithmetic expression from the
+    question using the LLM, then compute the exact answer with real code
+    instead of letting the LLM guess at arithmetic (which it is prone to
+    get wrong, especially with larger numbers or multiple steps).
+    """
+    extraction_prompt = f"""Extract ONLY the arithmetic expression from this question, using 
+plain math symbols (+, -, *, /, **) and numbers. Do not solve it. Do not explain. 
+Respond with ONLY the expression, nothing else.
+
+Question: {state['question']}
+
+Expression:"""
+
+    response = call_gemini_with_retry(
+        model="gemini-2.5-flash-lite",
+        contents=extraction_prompt,
+    )
+    expression = response.text.strip()
+
+    try:
+        result = calculator_tool(expression)
+        answer = f"{expression} = {result}"
+        print(f"[Tool: Calculator] Evaluated '{expression}' = {result}")
+    except Exception:
+        answer = (
+            f"I identified this as a math question, but couldn't safely parse the "
+            f"expression ('{expression}'). Could you rephrase it as a plain calculation?"
+        )
+        print(f"[Tool: Calculator] Failed to parse '{expression}'")
+
+    return {**state, "answer": answer, "sources": []}
+
+
 def route_decision(state: GraphState) -> str:
     """Tells the graph which node to go to next, based on the router's decision."""
-    return "rag_node" if state["needs_retrieval"] else "direct_answer_node"
+    mapping = {
+        "rag": "rag_node",
+        "direct": "direct_answer_node",
+        "clarify": "clarify_node",
+        "tool_calculator": "calculator_node",
+    }
+    return mapping[state["route"]]
 
 
 def build_graph():
@@ -123,6 +230,8 @@ def build_graph():
     workflow.add_node("router_node", router_node)
     workflow.add_node("rag_node", rag_node)
     workflow.add_node("direct_answer_node", direct_answer_node)
+    workflow.add_node("clarify_node", clarify_node)
+    workflow.add_node("calculator_node", calculator_node)
 
     workflow.add_edge(START, "router_node")
 
@@ -132,11 +241,15 @@ def build_graph():
         {
             "rag_node": "rag_node",
             "direct_answer_node": "direct_answer_node",
+            "clarify_node": "clarify_node",
+            "calculator_node": "calculator_node",
         },
     )
 
     workflow.add_edge("rag_node", END)
     workflow.add_edge("direct_answer_node", END)
+    workflow.add_edge("clarify_node", END)
+    workflow.add_edge("calculator_node", END)
 
     return workflow.compile()
 
@@ -146,10 +259,8 @@ if __name__ == "__main__":
     history = []
 
     test_questions = [
-        "How do I stop my container from losing data on restart?",
-        "What about for Kubernetes instead?",
-        "My name is Hiruni",
-        "Do you know my name?",
+        "If I run 3 replicas at 512 megabytes each, what's the total memory in megabytes?",
+        "Hello, how are you today?",
     ]
 
     for question in test_questions:
@@ -157,7 +268,7 @@ if __name__ == "__main__":
         print(f"Question: {question}")
         result = graph.invoke({
             "question": question,
-            "needs_retrieval": None,
+            "route": None,
             "answer": None,
             "sources": None,
             "history": history,
@@ -165,4 +276,8 @@ if __name__ == "__main__":
         print(f"Answer: {result['answer']}")
         print(f"Sources: {result['sources']}")
 
-        history.append({"question": question, "answer": result["answer"]})
+        history.append({
+            "question": question,
+            "answer": result["answer"],
+            "route": result["route"],
+        })
