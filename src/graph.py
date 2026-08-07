@@ -71,6 +71,29 @@ _ALLOWED_OPERATORS = {
 
 
 
+def _safe_eval(node):
+    if isinstance(node, ast.Constant):
+        return node.value
+    if isinstance(node, ast.BinOp) and type(node.op) in _ALLOWED_OPERATORS:
+        return _ALLOWED_OPERATORS[type(node.op)](_safe_eval(node.left), _safe_eval(node.right))
+    if isinstance(node, ast.UnaryOp) and type(node.op) in _ALLOWED_OPERATORS:
+        return _ALLOWED_OPERATORS[type(node.op)](_safe_eval(node.operand))
+    raise ValueError("Unsupported expression")
+
+
+def calculator_tool(expression: str):
+    """
+    Safely evaluates a plain arithmetic expression (+, -, *, /, **)
+    and returns a numeric result, without using Python's raw eval().
+    """
+    tree = ast.parse(expression, mode="eval")
+    return _safe_eval(tree.body)
+
+
+# --- Nodes --------------------------------------------------------------
+
+
+
 def router_node(state: GraphState) -> GraphState:
     """
     Decide how to handle this question: retrieve documents (RAG), answer
