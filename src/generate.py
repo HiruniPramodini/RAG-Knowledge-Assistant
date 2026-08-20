@@ -21,3 +21,23 @@ def format_history(history, limit=3):
     )
     return f"Previous conversation (use this to resolve references like 'that' or 'it'):\n{formatted}\n\n"
 
+
+def build_prompt(query, chunks, history=None):
+    """Combine retrieved chunks, conversation history, and the question into one prompt."""
+    context = "\n\n".join(
+        f"[Source: {chunk.metadata.get('source', 'unknown')}]\n{chunk.page_content}"
+        for chunk in chunks
+    )
+
+    history_text = format_history(history or [])
+
+    prompt = f"""You are a helpful engineering assistant. Answer the question using ONLY the context provided below. If the context doesn't contain enough information to answer, say so honestly instead of guessing.
+
+{history_text}Context:
+{context}
+
+Question: {query}
+
+Answer:"""
+    return prompt
+
