@@ -59,3 +59,11 @@ def generate_answer(query, k=3, history=None):
         "sources": sources,
     }
 
+
+if __name__ == "__main__":
+    query = "how do I stop my container from losing data on restart?"
+    result = generate_answer(query)
+
+    print(f"Question: {query}\n")
+    print(f"Answer:\n{result['answer']}\n")
+    print(f"Sources: {', '.join(result['sources'])}")
