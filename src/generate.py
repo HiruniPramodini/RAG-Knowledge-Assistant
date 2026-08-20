@@ -41,3 +41,21 @@ Question: {query}
 Answer:"""
     return prompt
 
+
+def generate_answer(query, k=3, history=None):
+    """Retrieve relevant chunks and generate a grounded answer, aware of prior conversation turns."""
+    chunks = retrieve_relevant_chunks(query, k=k)
+    prompt = build_prompt(query, chunks, history=history)
+
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+    )
+
+    sources = sorted(set(chunk.metadata.get("source", "unknown") for chunk in chunks))
+
+    return {
+        "answer": response.text,
+        "sources": sources,
+    }
+
