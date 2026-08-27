@@ -94,5 +94,3 @@ Tests verify that retrieval returns relevant, non-empty results from the correct
 **Automated tests passing:**
 
 ![Tests passing](screenshots/tests-passing.png)
-
-Rag.
