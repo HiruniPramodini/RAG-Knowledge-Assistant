@@ -1,7 +1,6 @@
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
-
-from config import VECTORSTORE_DIR, EMBEDDING_MODEL, GEMINI_API_KEY
+from src.config import VECTORSTORE_DIR, EMBEDDING_MODEL, GEMINI_API_KEY
 
 
 def load_vectorstore():

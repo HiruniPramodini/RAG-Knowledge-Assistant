@@ -1,4 +1,4 @@
-from src.generate import generate_answer
+from src.graph import build_graph
 
 
 def main():
@@ -7,6 +7,9 @@ def main():
     print("Ask questions about Docker, Kubernetes, and FastAPI.")
     print("Type 'exit' or 'quit' to stop.")
     print("=" * 60)
+
+    graph = build_graph()
+    history = []
 
     while True:
         query = input("\nYour question: ").strip()
@@ -18,10 +21,20 @@ def main():
         if not query:
             continue
 
-        result = generate_answer(query)
+        result = graph.invoke({
+            "question": query,
+            "needs_retrieval": None,
+            "answer": None,
+            "sources": None,
+            "history": history,
+        })
 
         print(f"\nAnswer:\n{result['answer']}")
-        print(f"\nSources: {', '.join(result['sources'])}")
+        if result["sources"]:
+            print(f"\nSources: {', '.join(result['sources'])}")
+
+        # Add this turn to history for future questions
+        history.append({"question": query, "answer": result["answer"]})
 
 
 if __name__ == "__main__":
