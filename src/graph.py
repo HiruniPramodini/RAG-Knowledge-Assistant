@@ -88,3 +88,41 @@ def calculator_tool(expression: str):
     tree = ast.parse(expression, mode="eval")
     return _safe_eval(tree.body)
 
+
+# --- Nodes --------------------------------------------------------------
+
+def router_node(state: GraphState) -> GraphState:
+    """
+    Decide how to handle this question: retrieve documents (RAG), answer
+    directly, ask a clarifying question, or hand off to the calculator
+    tool for precise arithmetic.
+
+    If the immediately previous turn was a clarifying question, we
+    deterministically force the RAG path rather than asking the LLM to
+    judge that again -- relying on the model to infer "this is a reply
+    to my own clarification" from history text alone proved unreliable.
+    """
+    question = state["question"]
+    history = state.get("history", [])
+
+    if history and history[-1].get("route") == "clarify":
+        print("[Router] Decision: rag (forced — this is a reply to a clarifying question)")
+        return {**state, "route": "rag"}
+
+    history_text = format_history(history)
+
+    routing_prompt = f"""{history_text}You are routing a new employee's message to one of four paths. 
+Respond with exactly one word: RAG, DIRECT, CLARIFY, or CALCULATOR.
+
+- RAG: the question is about the company — its policies, HR processes, IT setup, current 
+  projects, or code of conduct — even generally, and there is enough information to search 
+  internal documentation and answer it.
+- DIRECT: the question is unrelated to the company (greetings, small talk, general 
+  knowledge, personal info sharing) and needs no document lookup.
+- CLARIFY: the question is about the company, BUT it is too vague or ambiguous to answer 
+  usefully as-is (e.g. "how does that work?" with no clear prior context).
+- CALCULATOR: the question requires you to actually COMPUTE a result using arithmetic on 
+  specific numbers already given or implied (e.g. "if I have 20 days and used 12, how many 
+  are left?"). Do NOT choose CALCULATOR for questions that are simply asking what a policy 
+  number IS (e.g. "how many leave days do I get?") — those are RAG questions, since the 
+  answer is a fact to look up, not a calculation to perform.
