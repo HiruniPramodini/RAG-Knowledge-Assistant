@@ -126,3 +126,7 @@ Respond with exactly one word: RAG, DIRECT, CLARIFY, or CALCULATOR.
   are left?"). Do NOT choose CALCULATOR for questions that are simply asking what a policy 
   number IS (e.g. "how many leave days do I get?") — those are RAG questions, since the 
   answer is a fact to look up, not a calculation to perform.
+
+  git add data/raw_docs/company_overview.md data/raw_docs/current_projects.md data/raw_docs/it_onboarding.md src/graph.py
+git commit -m "Add the description of new .md files"
+git push
