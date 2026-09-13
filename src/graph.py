@@ -111,34 +111,70 @@ def router_node(state: GraphState) -> GraphState:
 
     history_text = format_history(history)
 
-    routing_prompt = f"""{history_text}You are routing a new employee's message to one of four paths.
+    routing_prompt = f"""{history_text}You are routing a new employee's message to one of four paths. 
 Respond with exactly one word: RAG, DIRECT, CLARIFY, or CALCULATOR.
 
-- RAG: the question is about the company — its policies, HR processes, IT setup, current
-  projects, or code of conduct — even generally, and there is enough information to search
+- RAG: the question is about the company — its policies, HR processes, IT setup, current 
+  projects, or code of conduct — even generally, and there is enough information to search 
   internal documentation and answer it.
-- DIRECT: the question is unrelated to the company (greetings, small talk, general
+- DIRECT: the question is unrelated to the company (greetings, small talk, general 
   knowledge, personal info sharing) and needs no document lookup.
-- CLARIFY: the question is about the company, BUT it is too vague or ambiguous to answer
+- CLARIFY: the question is about the company, BUT it is too vague or ambiguous to answer 
   usefully as-is (e.g. "how does that work?" with no clear prior context).
-- CALCULATOR: the question requires you to actually COMPUTE a result using arithmetic on
-  specific numbers already given or implied (e.g. "if I have 20 days and used 12, how many
-  are left?"). Do NOT choose CALCULATOR for questions that are simply asking what a policy
-  number IS (e.g. "how many leave days do I get?") — those are RAG questions, since the
+- CALCULATOR: the question requires you to actually COMPUTE a result using arithmetic on 
+  specific numbers already given or implied (e.g. "if I have 20 days and used 12, how many 
+  are left?"). Do NOT choose CALCULATOR for questions that are simply asking what a policy 
+  number IS (e.g. "how many leave days do I get?") — those are RAG questions, since the 
   answer is a fact to look up, not a calculation to perform.
 
-Question: {question}
+Current question: {question}
 
-Route:"""
+Respond with exactly one word: RAG, DIRECT, CLARIFY, or CALCULATOR."""
 
     response = call_gemini_with_retry(
         model="gemini-2.5-flash-lite",
         contents=routing_prompt,
     )
-    route = response.text.strip().upper()
-    if route not in {"RAG", "DIRECT", "CLARIFY", "CALCULATOR"}:
-        route = "RAG"
+
+    decision = response.text.strip().upper()
+
+    if "CALCULATOR" in decision:
+        route = "tool_calculator"
+    elif "CLARIFY" in decision:
+        route = "clarify"
+    elif "RAG" in decision:
+        route = "rag"
+    else:
+        route = "direct"
+
+    print(f"[Router] Decision: {route}")
+
     return {**state, "route": route}
+
+
+def rag_node(state: GraphState) -> GraphState:
+    """Run the existing retrieve + generate pipeline, passing conversation history through."""
+    result = generate_answer(state["question"], history=state.get("history", []))
+    return {**state, "answer": result["answer"], "sources": result["sources"]}
+
+
+def direct_answer_node(state: GraphState) -> GraphState:
+    """Answer directly, without any document retrieval, but still aware of prior turns."""
+    history_text = format_history(state.get("history", []))
+
+    prompt = f"""You are a helpful company onboarding assistant having an ongoing conversation. 
+Use the conversation history below to remember facts the user has already told you 
+(like their name), and answer naturally as a continuation of the conversation.
+
+{history_text}Current question: {state['question']}
+
+Answer:"""
+
+    response = call_gemini_with_retry(
+        model="gemini-2.5-flash-lite",
+        contents=prompt,
+    )
+    return {**state, "answer": response.text, "sources": []}
 
 
 def clarify_node(state: GraphState) -> GraphState:
@@ -148,10 +184,10 @@ def clarify_node(state: GraphState) -> GraphState:
     """
     history_text = format_history(state.get("history", []))
 
-    prompt = f"""{history_text}The user's question below is too vague or ambiguous to answer
-usefully as-is, in the context of a company onboarding assistant covering HR policies, IT
-setup, current projects, and code of conduct. Ask ONE short, specific clarifying question to
-understand what they actually need. Do not answer the question yet — only ask for
+    prompt = f"""{history_text}The user's question below is too vague or ambiguous to answer 
+usefully as-is, in the context of a company onboarding assistant covering HR policies, IT 
+setup, current projects, and code of conduct. Ask ONE short, specific clarifying question to 
+understand what they actually need. Do not answer the question yet — only ask for 
 clarification.
 
 Question: {state['question']}
@@ -200,4 +236,73 @@ Expression:"""
     return {**state, "answer": answer, "sources": []}
 
 
+def route_decision(state: GraphState) -> str:
+    """Tells the graph which node to go to next, based on the router's decision."""
+    mapping = {
+        "rag": "rag_node",
+        "direct": "direct_answer_node",
+        "clarify": "clarify_node",
+        "tool_calculator": "calculator_node",
+    }
+    return mapping[state["route"]]
 
+
+def build_graph():
+    """Assemble the graph: nodes, edges, and the conditional routing logic."""
+    workflow = StateGraph(GraphState)
+
+    workflow.add_node("router_node", router_node)
+    workflow.add_node("rag_node", rag_node)
+    workflow.add_node("direct_answer_node", direct_answer_node)
+    workflow.add_node("clarify_node", clarify_node)
+    workflow.add_node("calculator_node", calculator_node)
+
+    workflow.add_edge(START, "router_node")
+
+    workflow.add_conditional_edges(
+        "router_node",
+        route_decision,
+        {
+            "rag_node": "rag_node",
+            "direct_answer_node": "direct_answer_node",
+            "clarify_node": "clarify_node",
+            "calculator_node": "calculator_node",
+        },
+    )
+
+    workflow.add_edge("rag_node", END)
+    workflow.add_edge("direct_answer_node", END)
+    workflow.add_edge("clarify_node", END)
+    workflow.add_edge("calculator_node", END)
+
+    return workflow.compile()
+
+
+if __name__ == "__main__":
+    graph = build_graph()
+    history = []
+
+    test_questions = [
+        "How many days of annual leave do I get, and how many can I carry over next year?",
+        "If I use 12 leave days this year and I'm accrued 20, how many do I have left?",
+        "Hello, how are you today?",
+    ]
+
+    for question in test_questions:
+        print(f"\n{'='*60}")
+        print(f"Question: {question}")
+        result = graph.invoke({
+            "question": question,
+            "route": None,
+            "answer": None,
+            "sources": None,
+            "history": history,
+        })
+        print(f"Answer: {result['answer']}")
+        print(f"Sources: {result['sources']}")
+
+        history.append({
+            "question": question,
+            "answer": result["answer"],
+            "route": result["route"],
+        })
