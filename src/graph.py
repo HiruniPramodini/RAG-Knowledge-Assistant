@@ -53,3 +53,38 @@ def format_history(history, limit=3):
     )
     return f"Previous conversation:\n{formatted}\n\n"
 
+
+# --- Tool: calculator -------------------------------------------------
+# A real "tool" in the agentic sense: precise, deterministic code the
+# LLM cannot do reliably itself. We use Python's `ast` module to safely
+# evaluate only arithmetic expressions -- never raw eval(), which would
+# be a security risk (it could execute arbitrary code).
+
+_ALLOWED_OPERATORS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.Pow: operator.pow,
+    ast.USub: operator.neg,
+}
+
+
+def _safe_eval(node):
+    if isinstance(node, ast.Constant):
+        return node.value
+    if isinstance(node, ast.BinOp) and type(node.op) in _ALLOWED_OPERATORS:
+        return _ALLOWED_OPERATORS[type(node.op)](_safe_eval(node.left), _safe_eval(node.right))
+    if isinstance(node, ast.UnaryOp) and type(node.op) in _ALLOWED_OPERATORS:
+        return _ALLOWED_OPERATORS[type(node.op)](_safe_eval(node.operand))
+    raise ValueError("Unsupported expression")
+
+
+def calculator_tool(expression: str):
+    """
+    Safely evaluates a plain arithmetic expression (+, -, *, /, **)
+    and returns a numeric result, without using Python's raw eval().
+    """
+    tree = ast.parse(expression, mode="eval")
+    return _safe_eval(tree.body)
+
