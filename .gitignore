@@ -32,3 +32,4 @@ htmlcov/
 # Evaluation checkpoints and temp outputs
 eval/results_checkpoint.json
 scratch/
+.chroma/
