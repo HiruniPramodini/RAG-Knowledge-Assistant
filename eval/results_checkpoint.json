@@ -1,18 +1,34 @@
 [
   {
-    "question": "How do I stop my container from losing data on restart?",
-    "answer": "Docker volumes solve this by mapping a directory inside the container to a location on the host machine (or a Docker-managed storage area), so data persists across container restarts and removals.",
+    "category": "HR Policies",
+    "question": "How many days of annual leave do full-time employees accrue, and how many can be carried over?",
+    "answer": "Full-time permanent employees at Aurelia Tech accrue the following:\n\n*   **Annual Leave Accrual:** 20 days of paid annual leave per calendar year (accrued at 1.67 days per full calendar month worked).\n*   **Leave Carryover:** Up to 5 unused annual leave days can be carried over into the following calendar year. These carried-over days must be utilized within the first 6 months of the new year.\n\nSource: hr_policies.md",
     "expected_sources": [
-      "docker_basics.md"
+      "hr_policies.md"
     ],
     "retrieved_sources": [
-      "data\\raw_docs\\docker_basics.md",
-      "data\\raw_docs\\kubernetes_basics.md"
+      "hr_policies.md"
     ],
-    "precision": 0.6666666666666666,
+    "precision": 1.0,
     "recall": 1.0,
-    "faithfulness_score": 1.0,
-    "faithfulness_reason": "Every claim in the answer is directly supported as it is a verbatim sentence from the provided context.",
-    "latency_seconds": 5.27
+    "faithfulness_score": 0.0,
+    "faithfulness_reason": "The generated answer introduces the company name \"Aurelia Tech\" which is not mentioned or supported by the provided context.",
+    "latency_seconds": 3.96
+  },
+  {
+    "category": "HR Policies",
+    "question": "How many weeks of paid parental leave does Aurelia offer for primary and secondary caregivers?",
+    "answer": "Aurelia Tech offers the following paid parental leave:\n\n*   **Primary Caregiver Leave:** 16 weeks of 100% paid leave.\n*   **Secondary Caregiver Leave:** 6 weeks of 100% paid leave.\n\nSource: hr_policies.md",
+    "expected_sources": [
+      "hr_policies.md"
+    ],
+    "retrieved_sources": [
+      "hr_policies.md"
+    ],
+    "precision": 1.0,
+    "recall": 1.0,
+    "faithfulness_score": 0.0,
+    "faithfulness_reason": "Judge request failed after retries.",
+    "latency_seconds": 2.54
   }
 ]

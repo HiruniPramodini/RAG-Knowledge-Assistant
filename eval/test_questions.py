@@ -1,56 +1,103 @@
-# Ground-truth test questions for evaluating the RAG pipeline.
-# Each case includes the expected source document(s), based on the
-# actual content of our reference docs (we wrote them, so we know
-# exactly where each answer should come from).
+"""Ground-truth benchmark test questions for evaluating the Enterprise RAG Knowledge Assistant.
+
+Each test case contains the question, category, expected source documents,
+and the key factual criteria expected in the answer.
+"""
 
 TEST_CASES = [
-    # --- Docker questions ---
+    # --- HR Policies ---
     {
-        "question": "How do I stop my container from losing data on restart?",
-        "expected_sources": ["docker_basics.md"],
+        "category": "HR Policies",
+        "question": "How many days of annual leave do full-time employees accrue, and how many can be carried over?",
+        "expected_sources": ["hr_policies.md"],
     },
     {
-        "question": "What is the difference between a Docker image and a container?",
-        "expected_sources": ["docker_basics.md"],
+        "category": "HR Policies",
+        "question": "How many weeks of paid parental leave does Aurelia offer for primary and secondary caregivers?",
+        "expected_sources": ["hr_policies.md"],
     },
     {
-        "question": "What command do I use to build a Docker image from a Dockerfile?",
-        "expected_sources": ["docker_basics.md"],
-    },
-
-    # --- Kubernetes questions ---
-    {
-        "question": "What is a Kubernetes pod?",
-        "expected_sources": ["kubernetes_basics.md"],
-    },
-    {
-        "question": "How does Kubernetes automatically recover from a crashed pod?",
-        "expected_sources": ["kubernetes_basics.md"],
-    },
-    {
-        "question": "What is Horizontal Pod Autoscaling?",
-        "expected_sources": ["kubernetes_basics.md"],
+        "category": "HR Policies",
+        "question": "What is the doctor's note requirement for sick leave?",
+        "expected_sources": ["hr_policies.md"],
     },
 
-    # --- FastAPI questions ---
+    # --- IT Onboarding & Support ---
     {
-        "question": "How does FastAPI validate incoming request data?",
-        "expected_sources": ["fastapi_basics.md"],
+        "category": "IT Onboarding",
+        "question": "What are the company's password complexity rules and how often must passwords be changed?",
+        "expected_sources": ["it_onboarding.md"],
     },
     {
-        "question": "How do I load a trained model only once instead of on every request?",
-        "expected_sources": ["fastapi_basics.md"],
-    },
-
-    # --- Cross-document question (tests multi-source retrieval) ---
-    {
-        "question": "What's the difference between how Docker and Kubernetes handle scaling?",
-        "expected_sources": ["docker_basics.md", "kubernetes_basics.md"],
+        "category": "IT Onboarding",
+        "question": "What is the approval threshold and process for requesting additional software licenses?",
+        "expected_sources": ["it_onboarding.md"],
     },
 
-    # --- Out-of-scope question (tests honest "I don't know" behavior) ---
+    # --- Company Overview & Culture ---
     {
-        "question": "What is the capital of France?",
-        "expected_sources": [],  # nothing in our docs should match this
+        "category": "Company Overview",
+        "question": "What are the four core values of Aurelia Tech?",
+        "expected_sources": ["company_overview.md"],
+    },
+    {
+        "category": "Code of Conduct",
+        "question": "How can an employee report a Code of Conduct concern anonymously, and what is the policy on retaliation?",
+        "expected_sources": ["code_of_conduct.md"],
+    },
+
+    # --- Engineering & Tech Stack ---
+    {
+        "category": "Engineering Standards",
+        "question": "What are the branch naming rules and peer review approval requirements for pull requests?",
+        "expected_sources": ["engineering_standards.md"],
+    },
+    {
+        "category": "Technology Stack",
+        "question": "What are the standard backend frameworks and primary databases used across Aurelia services?",
+        "expected_sources": ["technology_stack.md"],
+    },
+
+    # --- Current Projects ---
+    {
+        "category": "Current Projects",
+        "question": "What is Project Atlas, which team owns it, and what technology stack does it use?",
+        "expected_sources": ["current_projects.md"],
+    },
+    {
+        "category": "Current Projects",
+        "question": "What is Project Horizon and who does the team report to?",
+        "expected_sources": ["current_projects.md"],
+    },
+
+    # --- Troubleshooting & Glossary ---
+    {
+        "category": "Troubleshooting",
+        "question": "What steps should I take if the Aurelia Secure VPN disconnects or refuses to connect?",
+        "expected_sources": ["troubleshooting.md"],
+    },
+    {
+        "category": "Glossary",
+        "question": "What does ADR stand for at Aurelia, and what is its purpose?",
+        "expected_sources": ["glossary.md"],
+    },
+
+    # --- Cross-Document Inquiry ---
+    {
+        "category": "Cross-Document",
+        "question": "What is the Innovation Time policy and how does it relate to Project Horizon?",
+        "expected_sources": ["current_projects.md", "glossary.md"],
+    },
+
+    # --- Out-of-Scope Negative Test Cases (Tests Honest Abstention) ---
+    {
+        "category": "Out-of-Scope",
+        "question": "What is the company policy regarding bringing pet elephants or exotic animals into the office?",
+        "expected_sources": [],  # Expects zero sources / honest abstention
+    },
+    {
+        "category": "Out-of-Scope",
+        "question": "What is the capital city of France?",
+        "expected_sources": [],  # Expects zero sources / honest abstention
     },
 ]
