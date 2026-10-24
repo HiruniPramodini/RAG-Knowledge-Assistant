@@ -1,33 +1,73 @@
-# Nexora Technologies — Company Overview
+# Aurelia Tech — Company Overview
 
-## Who We Are
+> **Notice:** This document is an approved demonstration knowledge asset for the fictional enterprise *Aurelia Tech*. Last updated: January 2026. Document Owner: People Operations & Corporate Communications.
 
-Nexora Technologies is a mid-sized technology company founded in 2015, providing software solutions to clients across finance, healthcare, and retail sectors. The company is headquartered in Austin, Texas, with a distributed workforce across North America and Europe. Nexora currently employs approximately 450 people.
+---
 
-## Mission
+## 1. Executive Summary & Who We Are
 
-Nexora's mission is to help organizations modernize their operations through reliable, secure, and scalable software systems, while maintaining a workplace culture that values transparency, continuous learning, and work-life balance.
+Aurelia Tech is an enterprise software engineering company founded in 2015. We design, build, and operate resilient digital systems for clients across finance, healthcare, and retail sectors. 
 
-## Company Structure
+Headquartered in Austin, Texas, Aurelia operates a distributed, remote-first workforce of approximately 450 full-time team members across North America and Western Europe, supported by regional collaboration hubs in Austin, Toronto, and Lisbon.
 
-Nexora is organized into four main departments:
+---
 
-**Engineering** — responsible for building and maintaining all client-facing and internal software products. Engineering is further divided into Platform, Product Engineering, and Data & AI teams.
+## 2. Mission and Vision
 
-**Product** — defines product strategy, gathers customer requirements, and works closely with Engineering to prioritize the roadmap.
+- **Our Mission:** To empower organizations to modernize mission-critical operations through scalable, secure, and maintainable software systems, while maintaining a workplace culture founded on transparency, ownership, and sustainable work-life balance.
+- **Our Vision:** To become the most trusted engineering partner for data-intensive enterprise platforms, delivering continuous innovation through practical artificial intelligence and disciplined platform engineering.
 
-**Client Success** — manages ongoing relationships with existing clients, handles onboarding of new clients, and provides technical support.
+---
 
-**Operations** — covers HR, Finance, IT, Legal, and Facilities.
+## 3. Core Values & Principles
 
-## Leadership
+Aurelia is guided by four enduring operating values:
 
-The company is led by a CEO, supported by a CTO (overseeing Engineering and Product), a COO (overseeing Operations and Client Success), and a CFO. Department heads report directly to their respective C-level executive.
+1. **Radical Transparency:** We communicate openly, share roadmaps transparently across all business units, and publish architectural decisions and retrospectives company-wide.
+2. **True Ownership:** We take accountability for outcomes, not just task completion. If a production release experiences an incident, the entire team owns the resolution and post-mortem learning.
+3. **Intellectual Curiosity:** We cultivate deliberate experimentation. Every engineer is supported with continuous learning stipends, hackathons, and dedicated Innovation Time.
+4. **Mutual Respect:** We interact with empathy, listen actively across diverse perspectives, and uphold psychological safety in technical debates and business reviews.
 
-## Office Locations and Remote Work
+---
 
-Nexora maintains physical offices in Austin (headquarters), Toronto, and Lisbon. Employees may work fully remote, hybrid, or in-office depending on their role and manager approval, as outlined in the Remote Work Policy section of the HR Policies document.
+## 4. Organizational Structure & Departments
 
-## Values
+Aurelia is organized into four core operational divisions:
 
-Nexora operates around four core values: **Transparency** (sharing information openly across teams), **Ownership** (taking responsibility for outcomes, not just tasks), **Curiosity** (encouraging continuous learning and experimentation), and **Respect** (treating colleagues and clients with professionalism and empathy).
+### Engineering
+Headed by the VP of Engineering (reporting to the CTO). Comprises:
+- **Platform Engineering:** Oversees cloud infrastructure, Kubernetes clusters, CI/CD pipelines, site reliability (SRE), and Project Beacon.
+- **Product Engineering:** Feature squads partnering directly with Product Managers across customer-facing solutions and Project Atlas.
+- **Data & AI Team:** Machine learning researchers, data engineers, and applied AI developers leading Project Horizon.
+- **Security & Compliance:** Responsible for zero-trust network access, SOC 2 compliance, penetration audits, and vulnerability management.
+
+### Product Management
+Led by the Chief Product Officer (CPO). Defines business strategy, customer discovery, product roadmaps, user experience (UX) research, and release scheduling.
+
+### Client Success & Operations
+Led by the Chief Operating Officer (COO). Comprises:
+- **Client Success Management (CSM):** Account health monitoring, onboarding facilitation, and executive business reviews (QBRs).
+- **Technical Support:** Tier-1 and Tier-2 incident handling and troubleshooting client integrations.
+- **People Operations (HR):** Talent acquisition, employee benefits, onboarding, compensation, and culture initiatives.
+- **IT & Workplace Services:** Laptop provisioning, VPN maintenance, account security, and office management.
+
+### Finance & Legal
+Led by the Chief Financial Officer (CFO). Handles financial forecasting, client contracts, expense reimbursements, vendor agreements, and regulatory compliance.
+
+---
+
+## 5. Working Arrangements & Office Hubs
+
+Aurelia is a **remote-first** company. Team members are welcome to work:
+- **Fully Remote:** From any approved jurisdiction with reliable internet connectivity.
+- **Hybrid / In-Hub:** Utilizing flex-desks at our Austin, Toronto, or Lisbon hubs for collaborative team sprints.
+
+All employees observe core collaboration hours from **10:00 AM to 3:00 PM** in their local timezone.
+
+---
+
+## 6. Document Ownership & Maintenance
+
+- **Owner:** People Operations (`people-ops@aureliatech.com`) & Corporate Communications.
+- **Review Frequency:** Bi-annually (Next scheduled review: July 2026).
+- **Classification:** Internal Employee Reference Document (Demonstration Tier).
