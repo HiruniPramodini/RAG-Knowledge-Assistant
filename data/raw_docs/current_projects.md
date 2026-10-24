@@ -1,21 +1,60 @@
-# Nexora Technologies — Current Projects Overview
+# Aurelia Tech — Current Projects & Strategic Initiatives
 
-## Project Atlas (Client Success Platform)
+> **Notice:** This document catalogs active demonstration engineering projects and strategic initiatives for *Aurelia Tech*. Last updated: January 2026. Document Owner: Project Management Office & Engineering Leadership (`pmo@aureliatech.com`).
 
-Atlas is an internal platform used by the Client Success team to track client health, renewal timelines, and support ticket history in one unified dashboard. It replaced three disconnected legacy tools in early 2025. Atlas is built with a React frontend and a Python/FastAPI backend, with PostgreSQL as the primary database. The Atlas team consists of 6 engineers, 1 product manager, and 1 designer, and follows a two-week sprint cycle.
+---
 
-## Project Horizon (Data & AI Initiative)
+## 1. Project Atlas — Unified Client Success Platform
 
-Horizon is Nexora's ongoing initiative to bring machine learning capabilities into client-facing products, starting with a churn-prediction model for the finance-sector client base and an internal document search assistant for company knowledge. Horizon is staffed by the Data & AI team (4 ML engineers, 2 data engineers) and reports jointly to the CTO and the Head of Product. Horizon operates on a more flexible, research-oriented cadence than standard product teams, with monthly rather than bi-weekly planning cycles.
+- **Objective & Business Problem:** Consolidate client account health monitoring, contract renewal schedules, support escalation telemetry, and usage analytics into a single real-time portal. It replaces three fragmented legacy CRM tools.
+- **Owning Team:** Product Engineering Squad (*Team Atlas*), comprising 6 software engineers, 1 product manager, 1 UX designer, and 1 QA lead.
+- **Technology Architecture:**
+  - **Frontend:** React 18, TypeScript, Tailwind CSS, Vite.
+  - **Backend:** Python 3.11, FastAPI, SQLAlchemy async ORM.
+  - **Data Tier:** AWS Aurora PostgreSQL, Redis cache.
+  - **Telemetry:** OpenTelemetry with Grafana dashboard.
+- **Deployment & Status:** Currently in **Production Release v2.4**. Serving 85 internal Client Success Managers across Austin and Lisbon hubs.
+- **Repository Reference:** `github.com/aurelia-tech/atlas-platform-demo` (internal).
 
-## Project Beacon (Platform Reliability)
+---
 
-Beacon is a cross-cutting initiative owned by the Platform team focused on improving system reliability, reducing production incidents, and modernizing deployment infrastructure across all client-facing products. Recent Beacon work has included migrating core services to containerized deployments and introducing automated rollback for failed releases. The Platform team supporting Beacon consists of 5 engineers and reports to the Head of Engineering.
+## 2. Project Horizon — Enterprise Data & AI Initiative
 
-## Retail Client Onboarding Revamp
+- **Objective & Business Problem:** Introduce applied AI and intelligent automation across client deliverables and internal knowledge discovery. Core sub-initiatives:
+  1. *Client Churn Predictor:* An XGBoost and neural ranking model forecasting client churn risk 90 days prior to contract expiration.
+  2. *Enterprise Knowledge Assistant (RAG):* An internal AI knowledge assistant enabling employees to query HR, IT, and engineering documentation with verified citations and agentic tool routing.
+- **Owning Team:** Data & AI Team, comprising 4 Machine Learning Engineers, 2 Data Platform Engineers, and 1 MLOps Specialist, reporting jointly to the CTO and CPO.
+- **Technology Architecture:**
+  - **Core Frameworks:** Python 3.11, LangChain, LangGraph state machine.
+  - **LLM Foundation:** Google Gemini API (`gemini-2.5-flash` synthesis, `gemini-2.5-flash-lite` router).
+  - **Vector Database:** ChromaDB with dense embeddings (`gemini-embedding-001`).
+  - **Frontend:** Streamlit enterprise chat application.
+- **Deployment & Status:** Currently in **Beta Phase / Pilot Rollout**. Under evaluation by 60 pilot employees across all departments.
 
-A joint initiative between Product and Client Success aimed at reducing the average time-to-onboard for new retail-sector clients from 6 weeks to 3 weeks, through a combination of self-service setup tools and revised implementation playbooks. This project is scheduled for completion by the end of the current fiscal year.
+---
 
-## How Projects Are Prioritized
+## 3. Project Beacon — Platform Reliability & Cloud Modernization
 
-Project prioritization happens quarterly, led by the Product department in consultation with department heads. Client-facing commitments and contractual deadlines take priority in scheduling, followed by platform reliability work, followed by exploratory/research initiatives such as parts of Project Horizon. Individual engineers can propose new internal tooling projects through the quarterly "Innovation Time" process, where 10% of engineering capacity each quarter is allocated to employee-proposed improvements.
+- **Objective & Business Problem:** Enhance infrastructure resilience, eliminate single points of failure, migrate lingering legacy VMs into containerized Kubernetes pods, and institute zero-downtime automated deployment pipelines.
+- **Owning Team:** Platform Engineering & SRE Team (5 site reliability engineers) reporting to the VP of Platform.
+- **Key Milestones Achieved:**
+  - Containerized 100% of core customer-facing backend APIs on AWS EKS.
+  - Implemented automated canary deployment rollouts via ArgoCD with automated rollback on error spikes (>0.5% 5xx).
+  - Reduced mean time to recovery (MTTR) by 42% across Q3-Q4.
+- **Deployment & Status:** **Active Multi-Quarter Initiative**. Next phase focuses on multi-region failover and cross-cloud disaster recovery drills.
+
+---
+
+## 4. Retail Client Onboarding Revamp
+
+- **Objective & Business Problem:** Streamline implementation workflows for enterprise retail customers, shortening onboarding time from 6 weeks down to 3 weeks through self-service schema mapping tools and automated data validation scripts.
+- **Owning Team:** Cross-functional initiative co-led by Product and Client Success.
+- **Deployment & Status:** **Scheduled for Q2 2026 completion**. Currently in pilot testing with two enterprise retail partner accounts.
+
+---
+
+## 5. Quarterly Innovation Time & Employee Hackathons
+
+- **Policy:** Aurelia allocates **10% of engineering bandwidth** (roughly 1 day every two weeks or a concentrated 3-day sprint per quarter) to *Innovation Time*.
+- **Eligibility:** All engineers, data scientists, and technical product managers who are on schedule with core deliverables.
+- **Process:** Employees pitch internal tooling improvements, open-source bug fixes, or prototype experimental machine learning models. Selected projects often graduate to official company roadmap items (as Project Horizon originated).
