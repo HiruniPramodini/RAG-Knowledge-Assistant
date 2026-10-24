@@ -1,6 +1,34 @@
+# Python virtual environment
 venv/
+.venv/
+env/
+
+# Python cache & artifacts
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+
+# Environment secrets & keys
 .env
+.env.local
+*.pem
+*.key
+
+# Vector database local storage
 vectorstore/
-.ipynb_checkpoints/.vscode/ 
+
+# Testing & quality caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Evaluation checkpoints and temp outputs
+eval/results_checkpoint.json
+scratch/
